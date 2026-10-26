@@ -1,0 +1,32 @@
+@using System.Globalization
+
+<label class="field">
+    <span class="field-label">@Label</span>
+    <span class="field-input">
+        <input type="number" inputmode="decimal" step="any" min="@Min" max="@Max"
+               value="@Value.ToString(CultureInfo.InvariantCulture)" @onchange="OnChange" />
+        @if (Unit is not null)
+        {
+            <span class="unit">@Unit</span>
+        }
+    </span>
+    @ChildContent
+</label>
+
+@code {
+    [Parameter, EditorRequired] public string Label { get; set; } = "";
+    [Parameter] public string? Unit { get; set; }
+    [Parameter] public string? Min { get; set; }
+    [Parameter] public string? Max { get; set; }
+    [Parameter] public double Value { get; set; }
+    [Parameter] public EventCallback<double> ValueChanged { get; set; }
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+
+    private async Task OnChange(ChangeEventArgs e)
+    {
+        // Accept both "1.5" and "1,5" so Danish keyboards work too.
+        var text = (e.Value?.ToString() ?? "").Replace(',', '.');
+        if (double.TryParse(text, NumberStyles.Float, CultureInfo.InvariantCulture, out var v))
+            await ValueChanged.InvokeAsync(v);
+    }
+}

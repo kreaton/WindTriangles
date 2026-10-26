@@ -1,0 +1,184 @@
+﻿@page "/"
+@using WindTriangles.Components
+@using WindTriangles.Navigation
+@inject IJSRuntime JS
+
+<PageTitle>WindTriangles</PageTitle>
+
+<header class="app-header">
+    <h1>WindTriangles</h1>
+    <p>Current, leeway, variation and deviation → the compass course to steer</p>
+</header>
+
+<main class="layout">
+    <form class="panel inputs" @onsubmit="Calculate" @onsubmit:preventDefault>
+        <fieldset>
+            <legend>Course</legend>
+            <NumberField Label="Desired course over ground" Unit="°T" Min="0" Max="360" @bind-Value="Input.DesiredCourse" />
+            <NumberField Label="Boat speed through water" Unit="kn" Min="0" @bind-Value="Input.BoatSpeed" />
+            <NumberField Label="Distance" Unit="nm" Min="0" @bind-Value="Input.Distance" />
+        </fieldset>
+
+        <fieldset>
+            <legend>Current</legend>
+            <NumberField Label="Set (flowing towards)" Unit="°T" Min="0" Max="360" @bind-Value="Input.CurrentSet" />
+            <NumberField Label="Drift" Unit="kn" Min="0" @bind-Value="Input.CurrentDrift" />
+        </fieldset>
+
+        <fieldset>
+            <legend>Wind</legend>
+            <NumberField Label="Direction (blowing from)" Unit="°T" Min="0" Max="360" @bind-Value="Input.WindDirection" />
+            <NumberField Label="True wind speed" Unit="kn" Min="0" @bind-Value="Input.WindSpeed" />
+            <NumberField Label="Leeway" Unit="°" Min="0" Max="45" @bind-Value="Input.Leeway" />
+        </fieldset>
+
+        <fieldset>
+            <legend>Magnetic</legend>
+            <NumberField Label="Variation" Unit="°" Min="0" Max="180" @bind-Value="Input.Variation">
+                <EastWestToggle @bind-East="Input.VariationEast" />
+            </NumberField>
+            <NumberField Label="Deviation" Unit="°" Min="0" Max="90" @bind-Value="Input.Deviation">
+                <EastWestToggle @bind-East="Input.DeviationEast" />
+            </NumberField>
+        </fieldset>
+
+        <div class="actions">
+            <button type="submit" class="primary">Calculate</button>
+            <button type="button" class="secondary" @onclick="Reset">Reset</button>
+        </div>
+    </form>
+
+    <section class="panel plot" aria-label="Vector plot">
+        <div class="toggles">
+            <span class="seg view" role="group" aria-label="Triangles to show">
+                <button type="button" class="@(View == PlotView.Current ? "on" : null)" @onclick="() => View = PlotView.Current">Current triangle</button>
+                <button type="button" class="@(View == PlotView.Wind ? "on" : null)" @onclick="() => View = PlotView.Wind">Wind triangle</button>
+                <button type="button" class="@(View == PlotView.Both ? "on" : null)" @onclick="() => View = PlotView.Both">Both</button>
+            </span>
+        </div>
+
+        <CompassPlot Result="Result"
+                     ShowCurrentTriangle="@(View != PlotView.Wind)"
+                     ShowWindTriangle="@(View != PlotView.Current)" />
+
+        <ul class="legend">
+            <li><span class="swatch ground"></span>Course &amp; speed over ground</li>
+            <li><span class="swatch water"></span>Course &amp; speed through water</li>
+            <li><span class="swatch current"></span>Current (set &amp; drift)</li>
+            <li><span class="swatch heading dashed"></span>True heading (incl. leeway)</li>
+            <li><span class="swatch true-wind"></span>True wind</li>
+            <li><span class="swatch apparent-wind"></span>Apparent wind</li>
+            <li><span class="swatch boat-wind dashed"></span>Headwind from boat motion</li>
+            <li><span class="pin mag-north"></span>Magnetic north</li>
+            <li><span class="pin compass-north"></span>Compass north</li>
+        </ul>
+    </section>
+
+    <section class="panel results" id="results" aria-live="polite">
+        @if (Error is not null)
+        {
+            <p class="error">@Error</p>
+        }
+        else if (Result is null)
+        {
+            <p class="placeholder">Enter the parameters and press <strong>Calculate</strong>.</p>
+        }
+        else
+        {
+            var r = Result;
+            <div class="headline">
+                <span class="headline-label">Compass course to steer</span>
+                <span class="headline-value">@Deg(r.CompassCourse)</span>
+                <span class="headline-sub">SOG @r.SpeedOverGround.ToString("0.0") kn · @FormatTime(r.TimeToGo)</span>
+            </div>
+
+            @foreach (var warning in r.Warnings)
+            {
+                <p class="warning">@warning</p>
+            }
+
+            <h2>From course to compass</h2>
+            <table class="chain">
+                <tbody>
+                    <tr><th>Desired course over ground</th><td></td><td>@Deg(r.DesiredCourse) T</td></tr>
+                    <tr><th>Current correction</th><td>@Signed(r.CurrentCorrection)</td><td>@Deg(r.CourseThroughWater) T</td></tr>
+                    <tr><th>Leeway correction</th><td>@Signed(r.LeewayCorrection)</td><td>@Deg(r.TrueHeading) T</td></tr>
+                    <tr><th>Variation @EastWest(r.Variation)</th><td>@Signed(-r.Variation)</td><td>@Deg(r.MagneticHeading) M</td></tr>
+                    <tr><th>Deviation @EastWest(r.Deviation)</th><td>@Signed(-r.Deviation)</td><td>@Deg(r.CompassCourse) C</td></tr>
+                </tbody>
+            </table>
+
+            <h2>Wind</h2>
+            <table class="chain">
+                <tbody>
+                    <tr><th>True wind angle</th><td></td><td>@Side(r.TrueWindAngle)</td></tr>
+                    <tr><th>Apparent wind</th><td>@r.ApparentWindSpeed.ToString("0.0") kn</td><td>from @Deg(r.ApparentWindDirection) T</td></tr>
+                    <tr><th>Apparent wind angle</th><td></td><td>@Side(r.ApparentWindAngle)</td></tr>
+                </tbody>
+            </table>
+        }
+    </section>
+</main>
+
+<footer class="credits">(c) Per Hejndorf, 2026 · @BuildInfo.Display</footer>
+
+@code {
+    private NavigationInput Input = new();
+    private NavigationResult? Result;
+    private string? Error;
+    private enum PlotView { Current, Wind, Both }
+    private PlotView View = PlotView.Current;
+
+    private async Task Calculate()
+    {
+        var outcome = WindTriangleCalculator.Calculate(Input);
+        Result = outcome.Result;
+        Error = outcome.Error;
+        StateHasChanged();
+        await JS.InvokeVoidAsync("windTriangles.revealResults");
+    }
+
+    private void Reset()
+    {
+        Input = new();
+        Result = null;
+        Error = null;
+    }
+
+    private static string Deg(double d) => $"{Math.Round(Angles.Normalize(d)) % 360:000}°";
+
+    private static string Signed(double d)
+    {
+        var rounded = Math.Round(d, 1);
+        return rounded switch
+        {
+            0 => "0°",
+            > 0 => $"+{rounded:0.#}°",
+            _ => $"−{-rounded:0.#}°",
+        };
+    }
+
+    private static string EastWest(double d) => d switch
+    {
+        0 => "",
+        > 0 => $"{d:0.#}° E",
+        _ => $"{-d:0.#}° W",
+    };
+
+    private static string Side(double angle)
+    {
+        var a = Math.Round(Math.Abs(angle));
+        return a switch
+        {
+            0 => "0° (dead ahead)",
+            180 => "180° (dead astern)",
+            _ => $"{a:0}° {(angle > 0 ? "starboard" : "port")}",
+        };
+    }
+
+    private static string FormatTime(TimeSpan t)
+    {
+        var minutes = (int)Math.Round(t.TotalMinutes);
+        return minutes >= 60 ? $"{minutes / 60} h {minutes % 60:00} min" : $"{minutes} min";
+    }
+}

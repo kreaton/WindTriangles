@@ -1,0 +1,406 @@
+/* ---------- Theme ---------- */
+:root {
+    --bg: #eef3f7;
+    --panel: #ffffff;
+    --text: #13202c;
+    --muted: #5b6b7a;
+    --border: #d5dee6;
+    --accent: #0a5fa8;
+    --accent-text: #ffffff;
+    --input-bg: #f7fafc;
+
+    --dial: #fbfdff;
+    --quadrant: #e8f0f7;
+    --ring: #dbe5ee;
+    --tick: #7a8a99;
+    --axis: #b7c5d2;
+
+    --c-ground: #1f8a3a;
+    --c-water: #0a5fa8;
+    --c-current: #d9730d;
+    --c-heading: #7b3fbf;
+    --c-true-wind: #4d8f99;
+    --c-apparent-wind: #c62a47;
+    --c-boat-wind: #8a96a3;
+    --c-mag-north: #c62a47;
+    --c-compass-north: #13202c;
+
+    --warn-bg: #fff4dc;
+    --warn-text: #7a4b00;
+    --error-bg: #fde6e9;
+    --error-text: #9b1c31;
+
+    --radius: 14px;
+}
+
+@media (prefers-color-scheme: dark) {
+    :root {
+        --bg: #0d151d;
+        --panel: #15212c;
+        --text: #e5edf4;
+        --muted: #93a4b4;
+        --border: #2a3a49;
+        --accent: #4aa3f0;
+        --accent-text: #06121d;
+        --input-bg: #0f1a24;
+
+        --dial: #111c26;
+        --quadrant: #182734;
+        --ring: #22333f;
+        --tick: #8697a7;
+        --axis: #33475a;
+
+        --c-ground: #4cc46b;
+        --c-water: #4aa3f0;
+        --c-current: #f29a43;
+        --c-heading: #b48cf0;
+        --c-true-wind: #6fc0cb;
+        --c-apparent-wind: #f06a83;
+        --c-boat-wind: #7f8d9b;
+        --c-mag-north: #f06a83;
+        --c-compass-north: #e5edf4;
+
+        --warn-bg: #3a2c0c;
+        --warn-text: #f5d38a;
+        --error-bg: #3d1720;
+        --error-text: #f7a9b6;
+    }
+}
+
+/* ---------- Base ---------- */
+*, *::before, *::after { box-sizing: border-box; }
+
+html { -webkit-text-size-adjust: 100%; }
+
+body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    font-size: 16px;
+    line-height: 1.4;
+    padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+    /* Header, content and footer stacked so the footer sits at the bottom of the screen */
+    min-height: 100vh;
+    min-height: 100dvh;
+    display: flex;
+    flex-direction: column;
+}
+
+#app {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.credits {
+    margin-top: auto;
+    padding: 8px 16px 14px;
+    text-align: center;
+    font-size: 0.75rem;
+    color: var(--muted);
+}
+
+.app-header {
+    padding: 16px 16px 4px;
+    width: 100%;
+    max-width: 1600px;
+    margin: 0 auto;
+}
+
+    .app-header h1 { margin: 0; font-size: 1.6rem; }
+    .app-header p { margin: 2px 0 0; color: var(--muted); font-size: 0.95rem; }
+
+/* ---------- Layout ---------- */
+.layout {
+    display: grid;
+    gap: 16px;
+    padding: 16px;
+    width: 100%;
+    max-width: 1600px;
+    margin: 0 auto;
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas: "inputs" "results" "plot";
+}
+
+.inputs { grid-area: inputs; }
+.results { grid-area: results; scroll-margin-top: 12px; }
+.plot { grid-area: plot; }
+
+/* iPad landscape / small laptops */
+@media (min-width: 900px) {
+    .layout {
+        grid-template-columns: minmax(320px, 400px) minmax(0, 1fr);
+        grid-template-areas: "inputs plot" "results plot";
+        align-items: start;
+    }
+
+    .plot { position: sticky; top: 16px; }
+}
+
+/* Desktop */
+@media (min-width: 1280px) {
+    .layout {
+        grid-template-columns: minmax(320px, 380px) minmax(0, 1fr) minmax(300px, 360px);
+        grid-template-areas: "inputs plot results";
+    }
+}
+
+.panel {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px;
+    min-width: 0;
+}
+
+/* ---------- Form ---------- */
+fieldset {
+    border: none;
+    margin: 0 0 14px;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 10px 12px;
+}
+
+legend {
+    font-weight: 700;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--muted);
+    padding: 0;
+    margin-bottom: 6px;
+}
+
+.field { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+
+.field-label { font-size: 0.85rem; color: var(--muted); }
+
+.field-input {
+    display: flex;
+    align-items: center;
+    background: var(--input-bg);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+    .field-input:focus-within { border-color: var(--accent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 25%, transparent); }
+
+    .field-input input {
+        flex: 1;
+        min-width: 0;
+        border: none;
+        background: transparent;
+        color: var(--text);
+        /* 16px or larger stops iOS Safari from zooming in on focus */
+        font-size: 1rem;
+        padding: 10px 10px;
+        outline: none;
+        -moz-appearance: textfield;
+    }
+
+        .field-input input::-webkit-outer-spin-button,
+        .field-input input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+
+    .field-input .unit { padding: 0 10px; color: var(--muted); font-size: 0.9rem; white-space: nowrap; }
+
+.seg {
+    display: inline-flex;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+    align-self: flex-start;
+}
+
+    .seg button {
+        border: none;
+        background: var(--input-bg);
+        color: var(--muted);
+        font: inherit;
+        font-weight: 600;
+        min-width: 44px;
+        min-height: 36px;
+        cursor: pointer;
+    }
+
+        .seg button.on { background: var(--accent); color: var(--accent-text); }
+
+.actions { display: flex; gap: 10px; margin-top: 6px; }
+
+button.primary, button.secondary {
+    font: inherit;
+    font-weight: 600;
+    border-radius: 10px;
+    min-height: 48px;
+    padding: 0 20px;
+    cursor: pointer;
+}
+
+button.primary { flex: 1; background: var(--accent); color: var(--accent-text); border: none; font-size: 1.05rem; }
+button.secondary { background: transparent; color: var(--text); border: 1px solid var(--border); }
+button.primary:active { filter: brightness(0.92); }
+
+/* ---------- Results ---------- */
+.placeholder { color: var(--muted); margin: 0; }
+
+.headline {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 6px 0 14px;
+    border-bottom: 1px solid var(--border);
+}
+
+.headline-label { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); }
+.headline-value { font-size: 3.2rem; font-weight: 800; line-height: 1.1; font-variant-numeric: tabular-nums; color: var(--accent); }
+.headline-sub { color: var(--muted); }
+
+.results h2 { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); margin: 16px 0 6px; }
+
+table.chain { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+
+    table.chain th { text-align: left; font-weight: 500; padding: 6px 0; }
+    table.chain td { text-align: right; padding: 6px 0 6px 10px; white-space: nowrap; }
+    table.chain td:last-child { font-weight: 700; }
+    table.chain tr + tr { border-top: 1px solid var(--border); }
+
+.warning, .error { border-radius: 10px; padding: 10px 12px; margin: 12px 0 0; }
+.warning { background: var(--warn-bg); color: var(--warn-text); }
+.error { background: var(--error-bg); color: var(--error-text); margin-top: 0; }
+
+/* ---------- Plot ---------- */
+.compass {
+    display: block;
+    width: 100%;
+    max-width: min(100%, 78vh);
+    margin: 0 auto;
+    height: auto;
+    font-family: inherit;
+    touch-action: manipulation;
+}
+
+    .compass .dial { fill: var(--dial); stroke: var(--tick); stroke-width: 1.2; }
+    .compass .quadrant { fill: var(--quadrant); }
+    .compass .ring { fill: none; stroke: var(--ring); stroke-width: 0.8; stroke-dasharray: 2 3; }
+    .compass .axis { stroke: var(--axis); stroke-width: 1; }
+    .compass .tick { stroke: var(--tick); }
+    .compass .tick.major { stroke-width: 1.4; }
+    .compass .tick.mid { stroke-width: 1; }
+    .compass .tick.minor { stroke-width: 0.5; }
+    .compass .deg-label { fill: var(--muted); font-size: 11px; text-anchor: middle; dominant-baseline: central; font-variant-numeric: tabular-nums; }
+    .compass .cardinal { fill: var(--text); font-size: 15px; font-weight: 800; text-anchor: middle; dominant-baseline: central; }
+    .compass .quadrant-label { fill: var(--axis); font-size: 13px; font-weight: 700; text-anchor: middle; dominant-baseline: central; }
+    .compass .origin { fill: var(--text); }
+
+    .compass .heading-line { stroke: var(--c-heading); stroke-width: 1.6; stroke-dasharray: 7 5; }
+
+    .compass .vector line { stroke-width: 3; stroke-linecap: round; }
+    .compass .vector text { font-size: 11px; font-weight: 700; text-anchor: middle; dominant-baseline: central; paint-order: stroke; stroke: var(--dial); stroke-width: 3px; }
+
+    .compass .vector.ground line { stroke: var(--c-ground); stroke-width: 3.5; }
+    .compass .vector.ground polygon, .compass .vector.ground text { fill: var(--c-ground); }
+    .compass .vector.water line { stroke: var(--c-water); }
+    .compass .vector.water polygon, .compass .vector.water text { fill: var(--c-water); }
+    .compass .vector.current line { stroke: var(--c-current); }
+    .compass .vector.current polygon, .compass .vector.current text { fill: var(--c-current); }
+    .compass .vector.true-wind line { stroke: var(--c-true-wind); }
+    .compass .vector.true-wind polygon, .compass .vector.true-wind text { fill: var(--c-true-wind); }
+    .compass .vector.apparent-wind line { stroke: var(--c-apparent-wind); }
+    .compass .vector.apparent-wind polygon, .compass .vector.apparent-wind text { fill: var(--c-apparent-wind); }
+    .compass .vector.boat-wind line { stroke: var(--c-boat-wind); stroke-width: 2; stroke-dasharray: 5 4; }
+    .compass .vector.boat-wind polygon { fill: var(--c-boat-wind); }
+
+    .compass .marker { stroke: var(--dial); stroke-width: 0.8; }
+    .compass .marker.mag-north { fill: var(--c-mag-north); }
+    .compass .marker.compass-north { fill: var(--c-compass-north); }
+    .compass .marker.heading { fill: var(--c-heading); }
+
+.toggles { display: flex; justify-content: center; margin: 0 0 12px; }
+    .seg.view { align-self: center; max-width: 100%; }
+    .seg.view button { padding: 0 12px; min-height: 40px; font-size: 0.9rem; }
+
+.legend {
+    list-style: none;
+    padding: 0;
+    margin: 8px 0 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 4px 16px;
+    font-size: 0.85rem;
+    color: var(--muted);
+}
+
+    .legend li { display: flex; align-items: center; gap: 8px; }
+
+.swatch { width: 26px; height: 0; border-top: 3px solid; flex: none; }
+    .swatch.dashed { border-top-style: dashed; }
+    .swatch.ground { border-color: var(--c-ground); }
+    .swatch.water { border-color: var(--c-water); }
+    .swatch.current { border-color: var(--c-current); }
+    .swatch.heading { border-color: var(--c-heading); }
+    .swatch.true-wind { border-color: var(--c-true-wind); }
+    .swatch.apparent-wind { border-color: var(--c-apparent-wind); }
+    .swatch.boat-wind { border-color: var(--c-boat-wind); }
+
+.pin { width: 0; height: 0; margin: 0 9px; border-left: 5px solid transparent; border-right: 5px solid transparent; border-top: 10px solid; flex: none; }
+    .pin.mag-north { border-top-color: var(--c-mag-north); }
+    .pin.compass-north { border-top-color: var(--c-compass-north); }
+
+/* ---------- Blazor template bits ---------- */
+#blazor-error-ui {
+    color-scheme: light only;
+    background: lightyellow;
+    color: #000;
+    bottom: 0;
+    box-shadow: 0 -1px 2px rgba(0, 0, 0, 0.2);
+    display: none;
+    left: 0;
+    padding: 0.6rem 1.25rem 0.7rem 1.25rem;
+    position: fixed;
+    width: 100%;
+    z-index: 1000;
+}
+
+    #blazor-error-ui .dismiss {
+        cursor: pointer;
+        position: absolute;
+        right: 0.75rem;
+        top: 0.5rem;
+    }
+
+.loading-progress {
+    position: absolute;
+    display: block;
+    width: 8rem;
+    height: 8rem;
+    inset: 20vh 0 auto 0;
+    margin: 0 auto 0 auto;
+}
+
+    .loading-progress circle {
+        fill: none;
+        stroke: var(--border);
+        stroke-width: 0.6rem;
+        transform-origin: 50% 50%;
+        transform: rotate(-90deg);
+    }
+
+        .loading-progress circle:last-child {
+            stroke: var(--accent);
+            stroke-dasharray: calc(3.141 * var(--blazor-load-percentage, 0%) * 0.8), 500%;
+            transition: stroke-dasharray 0.05s ease-in-out;
+        }
+
+.loading-progress-text {
+    position: absolute;
+    text-align: center;
+    font-weight: bold;
+    inset: calc(20vh + 3.25rem) 0 auto 0.2rem;
+}
+
+    .loading-progress-text:after {
+        content: var(--blazor-load-percentage-text, "Loading");
+    }

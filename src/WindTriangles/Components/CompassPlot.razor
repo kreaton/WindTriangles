@@ -1,0 +1,202 @@
+@using System.Globalization
+@using WindTriangles.Navigation
+
+<svg class="compass" viewBox="-210 -210 420 420" role="img"
+     aria-label="Compass rose showing the current and wind triangles">
+    <defs>
+        <clipPath id="dial-clip"><circle r="@F(R)" /></clipPath>
+    </defs>
+
+    <circle class="dial" r="@F(R)" />
+    <path class="quadrant" d="@QuadrantNE" />
+    <path class="quadrant" d="@QuadrantSW" />
+
+    @foreach (var ring in Rings)
+    {
+        <circle class="ring" r="@F(ring)" />
+    }
+
+    <line class="axis" x1="0" y1="@F(-R)" x2="0" y2="@F(R)" />
+    <line class="axis" x1="@F(-R)" y1="0" x2="@F(R)" y2="0" />
+
+    @foreach (var tick in Ticks)
+    {
+        <line class="@tick.Css" x1="@F(tick.X1)" y1="@F(tick.Y1)" x2="@F(tick.X2)" y2="@F(tick.Y2)" />
+    }
+    @foreach (var label in DegreeLabels)
+    {
+        <g><text class="deg-label" x="@F(label.X)" y="@F(label.Y)">@label.Text</text></g>
+    }
+    @foreach (var label in CardinalLabels)
+    {
+        <g><text class="cardinal" x="@F(label.X)" y="@F(label.Y)">@label.Text</text></g>
+    }
+
+    <text class="quadrant-label" x="@F(QuadrantOffset)" y="@F(-QuadrantOffset)">NE</text>
+    <text class="quadrant-label" x="@F(QuadrantOffset)" y="@F(QuadrantOffset)">SE</text>
+    <text class="quadrant-label" x="@F(-QuadrantOffset)" y="@F(QuadrantOffset)">SW</text>
+    <text class="quadrant-label" x="@F(-QuadrantOffset)" y="@F(-QuadrantOffset)">NW</text>
+
+    @if (Result is not null)
+    {
+        <g clip-path="url(#dial-clip)">
+            @{ var (hx, hy) = Polar(Result.TrueHeading, R); }
+            <line class="heading-line" x1="0" y1="0" x2="@F(hx)" y2="@F(hy)" />
+        </g>
+
+        @foreach (var marker in RingMarkers)
+        {
+            <polygon class="@marker.Css" points="@marker.Points" />
+        }
+
+        @foreach (var arrow in Arrows)
+        {
+            <g class="vector @arrow.Css">
+                <line x1="@F(arrow.X1)" y1="@F(arrow.Y1)" x2="@F(arrow.X2)" y2="@F(arrow.Y2)" />
+                <polygon points="@arrow.Head" />
+                @if (arrow.Label is not null)
+                {
+                    <g><text x="@F(arrow.LabelX)" y="@F(arrow.LabelY)">@arrow.Label</text></g>
+                }
+            </g>
+        }
+    }
+
+    <circle class="origin" r="3.5" />
+</svg>
+
+@code {
+    private const double R = 170;
+    private const double QuadrantOffset = 62;
+    private static readonly double[] Rings = [R * 0.25, R * 0.5, R * 0.75];
+    private static readonly string QuadrantNE = $"M0,0 L0,{F(-R)} A{F(R)},{F(R)} 0 0 1 {F(R)},0 Z";
+    private static readonly string QuadrantSW = $"M0,0 L0,{F(R)} A{F(R)},{F(R)} 0 0 1 {F(-R)},0 Z";
+
+    [Parameter] public NavigationResult? Result { get; set; }
+    [Parameter] public bool ShowCurrentTriangle { get; set; } = true;
+    [Parameter] public bool ShowWindTriangle { get; set; } = true;
+
+    private record Tick(string Css, double X1, double Y1, double X2, double Y2);
+    private record Label(string Text, double X, double Y);
+    private record Marker(string Css, string Points);
+    private record Arrow(string Css, double X1, double Y1, double X2, double Y2, string Head,
+                         string? Label, double LabelX, double LabelY);
+
+    private static readonly List<Tick> Ticks = BuildTicks();
+    private static readonly List<Label> DegreeLabels = BuildDegreeLabels();
+    private static readonly List<Label> CardinalLabels =
+    [
+        new("N", 0, -R - 18), new("E", R + 18, 0), new("S", 0, R + 18), new("W", -R - 18, 0),
+    ];
+
+    private List<Arrow> Arrows = [];
+    private List<Marker> RingMarkers = [];
+
+    protected override void OnParametersSet()
+    {
+        Arrows = [];
+        RingMarkers = [];
+        if (Result is null)
+            return;
+
+        var r = Result;
+        // Points reached by the drawn triangles, used to fit everything inside the dial.
+        var reach = new List<Vec> { r.Ground };
+        if (ShowCurrentTriangle)
+            reach.Add(r.Water);
+        if (ShowWindTriangle)
+            reach.AddRange([r.TrueWind, r.ApparentWind]);
+        var scale = R * 0.8 / Math.Max(reach.Max(v => v.Length), 0.1);
+
+        var origin = new Vec(0, 0);
+        if (ShowCurrentTriangle)
+        {
+            Arrows.Add(MakeArrow("water", origin, r.Water, scale, "Water"));
+            if (r.Current.Length > 0)
+                Arrows.Add(MakeArrow("current", r.Water, r.Ground, scale, "Current"));
+        }
+        if (ShowWindTriangle && r.TrueWind.Length > 0)
+        {
+            Arrows.Add(MakeArrow("true-wind", origin, r.TrueWind, scale, "True wind"));
+            Arrows.Add(MakeArrow("boat-wind", r.TrueWind, r.ApparentWind, scale, null));
+            Arrows.Add(MakeArrow("apparent-wind", origin, r.ApparentWind, scale, "Apparent"));
+        }
+        Arrows.Add(MakeArrow("ground", origin, r.Ground, scale, "Ground"));
+
+        // Magnetic and compass north are shown as markers on the dial, in true bearings.
+        RingMarkers.Add(new("marker mag-north", RingTriangle(r.Variation)));
+        RingMarkers.Add(new("marker compass-north", RingTriangle(r.Variation + r.Deviation)));
+        RingMarkers.Add(new("marker heading", RingTriangle(r.TrueHeading)));
+    }
+
+    private static Arrow MakeArrow(string css, Vec from, Vec to, double scale, string? label)
+    {
+        var (x1, y1) = (from.East * scale, -from.North * scale);
+        var (x2, y2) = (to.East * scale, -to.North * scale);
+        var dx = x2 - x1;
+        var dy = y2 - y1;
+        var len = Math.Sqrt(dx * dx + dy * dy);
+        if (len < 1e-6)
+            return new Arrow(css, x1, y1, x2, y2, "", null, 0, 0);
+
+        var (ux, uy) = (dx / len, dy / len);
+        var head = Math.Min(11, len * 0.4);
+        var (bx, by) = (x2 - ux * head, y2 - uy * head);
+        var (px, py) = (-uy * head * 0.45, ux * head * 0.45);
+        var points = string.Join(" ",
+            P(x2, y2), P(bx + px, by + py), P(bx - px, by - py));
+
+        // Shorten the line so it ends at the base of the arrowhead.
+        var lineEnd = (x: bx + ux, y: by + uy);
+
+        // Label at the midpoint, nudged off the line.
+        var (mx, my) = ((x1 + x2) / 2 - uy * 11, (y1 + y2) / 2 + ux * 11);
+        return new Arrow(css, x1, y1, lineEnd.x, lineEnd.y, points, label, mx, my);
+    }
+
+    private static string RingTriangle(double bearing)
+    {
+        var (tx, ty) = Polar(bearing, R - 1);
+        var (lx, ly) = Polar(bearing - 2.6, R + 11);
+        var (rx, ry) = Polar(bearing + 2.6, R + 11);
+        return string.Join(" ", P(tx, ty), P(lx, ly), P(rx, ry));
+    }
+
+    private static List<Tick> BuildTicks()
+    {
+        var ticks = new List<Tick>(360);
+        for (var deg = 0; deg < 360; deg++)
+        {
+            var (len, css) = deg % 10 == 0 ? (12.0, "tick major")
+                           : deg % 5 == 0 ? (8.0, "tick mid")
+                           : (4.0, "tick minor");
+            var (x1, y1) = Polar(deg, R);
+            var (x2, y2) = Polar(deg, R - len);
+            ticks.Add(new Tick(css, x1, y1, x2, y2));
+        }
+        return ticks;
+    }
+
+    private static List<Label> BuildDegreeLabels()
+    {
+        var labels = new List<Label>();
+        for (var deg = 0; deg < 360; deg += 30)
+        {
+            var (x, y) = Polar(deg, R - 24);
+            labels.Add(new Label(deg.ToString("000", CultureInfo.InvariantCulture), x, y));
+        }
+        return labels;
+    }
+
+    /// <summary>Screen position for a bearing (clockwise from north) and radius.</summary>
+    private static (double X, double Y) Polar(double bearing, double radius)
+    {
+        var rad = Angles.ToRadians(bearing);
+        return (radius * Math.Sin(rad), -radius * Math.Cos(rad));
+    }
+
+    private static string P(double x, double y) => $"{F(x)},{F(y)}";
+
+    // SVG needs invariant numbers regardless of the browser's culture.
+    private static string F(double v) => v.ToString("0.##", CultureInfo.InvariantCulture);
+}

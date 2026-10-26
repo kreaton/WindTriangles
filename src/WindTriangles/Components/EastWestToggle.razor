@@ -1,0 +1,11 @@
+<span class="seg" role="group" aria-label="East or west">
+    <button type="button" class="@(East ? "on" : null)" aria-pressed="@East" @onclick="() => Set(true)">E</button>
+    <button type="button" class="@(East ? null : "on")" aria-pressed="@(!East)" @onclick="() => Set(false)">W</button>
+</span>
+
+@code {
+    [Parameter] public bool East { get; set; }
+    [Parameter] public EventCallback<bool> EastChanged { get; set; }
+
+    private Task Set(bool east) => EastChanged.InvokeAsync(east);
+}
