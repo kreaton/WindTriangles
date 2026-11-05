@@ -1,5 +1,7 @@
 # WindTriangles
 
+**Live app: <https://kreaton.github.io/WindTriangles/>**
+
 A sailing navigation aid that calculates the **compass course to steer**. You enter the desired course and distance, the boat speed, the current (set and drift), the wind (direction and speed), the leeway, the variation and the deviation. Press **Calculate**, and the app shows:
 
 - the compass course, speed over ground and time to go
@@ -27,9 +29,9 @@ The version is `Major.Minor.Build`. Major and minor are set by hand in `Director
 
 ## CI/CD
 
-`.github/workflows/deploy.yml` runs on every push to `main` (or manually from the Actions tab). It publishes a Release build with the run number as the version, then uploads `wwwroot` to the web server over FTP. Only changed files are sent after the first run.
+`.github/workflows/deploy.yml` runs on every push to `main` (or manually from the Actions tab). It publishes a Release build with the run number as the version, then deploys `wwwroot` to GitHub Pages and uploads it to the web server over FTP. Only changed files are sent by FTP after the first run.
 
-It needs these repository secrets (Settings › Secrets and variables › Actions):
+The FTP upload needs these repository secrets (Settings › Secrets and variables › Actions):
 
 | Secret | Example |
 |--------|---------|
@@ -38,7 +40,7 @@ It needs these repository secrets (Settings › Secrets and variables › Action
 | `FTP_PASSWORD` | |
 | `FTP_FOLDER` | `webroots/www/windtriangles` (no trailing slash) |
 
-The app is meant to be hosted under `/windtriangles/` (`<base href="windtriangles" />` in `wwwroot/index.html`, the same convention as the other apps).
+The app is hosted under `/windtriangles/` by FTP and `/WindTriangles/` on GitHub Pages. `<base href="windtriangles" />` in `wwwroot/index.html` resolves relative to the page's folder, so both work.
 
 ## Project layout
 
