@@ -1,5 +1,14 @@
 # WindTriangles
 
+[![Live app](https://img.shields.io/badge/live%20app-open-2ea44f)](https://kreaton.github.io/WindTriangles/)
+![Blazor WebAssembly](https://img.shields.io/badge/Blazor-WebAssembly-lightgrey)
+![.NET 10](https://img.shields.io/badge/.NET-10-lightgrey)
+![Installable web app](https://img.shields.io/badge/PWA-installable-lightgrey)
+
+![WindTriangles: the compass course to steer, with current, wind and leeway](images/banner.png)
+
+**The compass course to steer, allowing for current, wind and leeway.**
+
 **Live app: <https://kreaton.github.io/WindTriangles/>**
 
 A sailing navigation aid that calculates the **compass course to steer**. You enter the desired course and distance, the boat speed, the current (set and drift), the wind (direction and speed), the leeway, the variation and the deviation. Press **Calculate**, and the app shows:
