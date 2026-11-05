@@ -1,6 +1,7 @@
 # WindTriangles
 
 [![Live app](https://img.shields.io/badge/live%20app-open-2ea44f)](https://kreaton.github.io/WindTriangles/)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
 ![Blazor WebAssembly](https://img.shields.io/badge/Blazor-WebAssembly-lightgrey)
 ![.NET 10](https://img.shields.io/badge/.NET-10-lightgrey)
 ![Installable web app](https://img.shields.io/badge/PWA-installable-lightgrey)
@@ -64,3 +65,7 @@ src/WindTriangles/
   Pages/Home.razor                      The page: inputs, results, plot and footer
   BuildInfo.cs                          Version, build time and commit for the footer
 ```
+
+## License
+
+[MIT](LICENSE) © 2026 Per Hejndorf.
