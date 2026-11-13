@@ -39,18 +39,9 @@ The version is `Major.Minor.Build`. Major and minor are set by hand in `Director
 
 ## CI/CD
 
-`.github/workflows/deploy.yml` runs on every push to `main` (or manually from the Actions tab). It publishes a Release build with the run number as the version, then deploys `wwwroot` to GitHub Pages and uploads it to the web server over FTP. Only changed files are sent by FTP after the first run.
+`.github/workflows/deploy.yml` runs on every push to `main` (or manually from the Actions tab). It publishes a Release build with the run number as the version, then deploys `wwwroot` to [GitHub Pages](https://kreaton.github.io/WindTriangles/).
 
-The FTP upload needs these repository secrets (Settings › Secrets and variables › Actions):
-
-| Secret | Example |
-|--------|---------|
-| `FTP_HOST` | `ftp.example.com` |
-| `FTP_USERNAME` | |
-| `FTP_PASSWORD` | |
-| `FTP_FOLDER` | `webroots/www/windtriangles` (no trailing slash) |
-
-The app is hosted under `/windtriangles/` by FTP and `/WindTriangles/` on GitHub Pages. `<base href="windtriangles" />` in `wwwroot/index.html` resolves relative to the page's folder, so both work.
+`<base href="windtriangles" />` in `wwwroot/index.html` resolves relative to the page's folder, so the app works under any sub-path.
 
 ## Project layout
 
