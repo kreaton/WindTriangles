@@ -5,6 +5,9 @@
 ![Blazor WebAssembly](https://img.shields.io/badge/Blazor-WebAssembly-lightgrey)
 ![.NET 10](https://img.shields.io/badge/.NET-10-lightgrey)
 ![Installable web app](https://img.shields.io/badge/PWA-installable-lightgrey)
+[![GitHub stars](https://img.shields.io/github/stars/kreaton/WindTriangles?style=flat&logo=github&color=yellow)](https://github.com/kreaton/WindTriangles/stargazers)
+
+⭐ If WindTriangles earns a place on your machine, [star it on GitHub](https://github.com/kreaton/WindTriangles) — it's free, made by one developer, and stars are how other people find it.
 
 ![WindTriangles: the compass course to steer, with current, wind and leeway](images/banner.png)
 
